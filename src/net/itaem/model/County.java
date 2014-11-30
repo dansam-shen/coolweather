@@ -1,4 +1,4 @@
-package net.itaem.db;
+package net.itaem.model;
 
 public class County {
 	private int id;

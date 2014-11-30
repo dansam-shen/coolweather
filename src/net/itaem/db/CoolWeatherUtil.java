@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.itaem.model.City;
+import net.itaem.model.County;
 import net.itaem.model.Province;
 import android.content.Context;
 import android.database.Cursor;
