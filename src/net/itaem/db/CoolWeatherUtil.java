@@ -10,41 +10,43 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+/**
+ * @author Administrator 将数据进行持久化的类
+ */
 public class CoolWeatherUtil {
 	private final static int VERSION = 1;
-	private final static String DB_NAME = "cool_weather";
-	private SQLiteDatabase database;
+	private final static String DB_NAME = "my_cool_weather";
+	private SQLiteDatabase db;
+	private static CoolWeatherUtil dbUtil;
 
 	private CoolWeatherUtil(Context context) {
-		CoolWeatherDBOpenHelper helper = new CoolWeatherDBOpenHelper(context,
+		CoolWeatherOpenHelper helper = new CoolWeatherOpenHelper(context,
 				DB_NAME, null, VERSION);
-		database = helper.getWritableDatabase();
-	};
-
-	private static CoolWeatherUtil helper;
+		db = helper.getWritableDatabase();
+	}
 
 	public synchronized static CoolWeatherUtil getInstance(Context context) {
-		if (helper == null) {
-			helper = new CoolWeatherUtil(context);
+		if (dbUtil == null) {
+			dbUtil = new CoolWeatherUtil(context);
 		}
-		return helper;
+		return dbUtil;
 	}
 
 	// 插入省级数据
 	public boolean saveProvince(Province province) {
-		String sql = "insert into province(province_name,province_code) values(?,?)";
+		String sql = "insert into Province(province_name,province_code) values(?,?)";
 		if (province != null) {
 			Object[] objs = new Object[] { province.getProvinceName(),
 					province.getPrivinceCode() };
-			database.execSQL(sql, objs);
+			db.execSQL(sql, objs);
 			return true;
 		}
 		return false;
 	}
 
 	public List<Province> getProvinces() {
-		String sql = "select * from province";
-		Cursor cursor = database.rawQuery(sql, null);
+		String sql = "select * from Province";
+		Cursor cursor = db.rawQuery(sql, null);
 		List<Province> provinces = new ArrayList<Province>();
 		while (cursor.moveToNext()) {
 			int id = cursor.getInt(cursor.getColumnIndex("id"));
@@ -64,15 +66,16 @@ public class CoolWeatherUtil {
 		if (city != null) {
 			Object[] objs = new Object[] { city.getCityName(),
 					city.getCityCode(), city.getProvinceId() };
-			database.execSQL(sql, objs);
+			db.execSQL(sql, objs);
 			return true;
 		}
 		return false;
 	}
 
-	public List<City> getCitys() {
-		String sql = "select * from city";
-		Cursor cursor = database.rawQuery(sql, null);
+	public List<City> getCitys(int provinceId) {
+		String sql = "select * from city where province_id=?";
+		String objs[] = new String[] { provinceId + "" };
+		Cursor cursor = db.rawQuery(sql, objs);
 		List<City> citys = new ArrayList<City>();
 		while (cursor.moveToNext()) {
 			int id = cursor.getInt(cursor.getColumnIndex("id"));
@@ -80,8 +83,6 @@ public class CoolWeatherUtil {
 					.getColumnIndex("city_name"));
 			String cityCode = cursor.getString(cursor
 					.getColumnIndex("city_code"));
-			int provinceId = cursor
-					.getInt(cursor.getColumnIndex("province_id"));
 			City city = new City(id, cityName, cityCode, provinceId);
 			citys.add(city);
 		}
@@ -94,15 +95,16 @@ public class CoolWeatherUtil {
 		if (county != null) {
 			Object[] objs = new Object[] { county.getCountyName(),
 					county.getCountyCode(), county.getCityId() };
-			database.execSQL(sql, objs);
+			db.execSQL(sql, objs);
 			return true;
 		}
 		return false;
 	}
 
-	public List<County> getCountys() {
-		String sql = "select * from county";
-		Cursor cursor = database.rawQuery(sql, null);
+	public List<County> getCountys(int cityId) {
+		String sql = "select * from county where city_id=?";
+		String objs[] = new String[] { cityId + "" };
+		Cursor cursor = db.rawQuery(sql, objs);
 		List<County> countys = new ArrayList<County>();
 		while (cursor.moveToNext()) {
 			int id = cursor.getInt(cursor.getColumnIndex("id"));
@@ -110,8 +112,6 @@ public class CoolWeatherUtil {
 					.getColumnIndex("county_name"));
 			String countyCode = cursor.getString(cursor
 					.getColumnIndex("county_code"));
-			int cityId = cursor.getInt(cursor.getColumnIndex("city_id"));
-
 			County county = new County(id, countyName, countyCode, cityId);
 			countys.add(county);
 		}
